@@ -537,6 +537,7 @@ const tri = (k, a) => k + ' ' + angStr(a);   // 「tan 30°」
 
 // ---------- 第1章 直角三角形：頂点 T（角 θ）・R（直角）・O。向きは 回転 rot（90°ずつ）と 裏返し flip ----------
 const SIDE = { adj: [0, 1], opp: [1, 2], hyp: [0, 2] };   // となり・向かい・斜辺 ＝ どの 頂点と どの 頂点を むすぶ 辺か
+const SIDE_TIP = { hyp: '斜辺：直角の 向かいの 辺', opp: '向かいの 辺：θ に ふれない 辺', adj: 'となりの 辺：θ と 直角を むすぶ 辺' };
 const SIDE_JP = { adj: 'となりの 辺', opp: '向かいの 辺', hyp: '斜辺' };
 const sideName = pr => Object.keys(SIDE).find(k => sameSet(SIDE[k], pr));
 const R3 = Math.sqrt(3), R2 = Math.SQRT2;
@@ -1239,7 +1240,7 @@ function damage(p, L, ev, rng, combo = 0) {
 }
 // 各章：ザコ（形ごとに 1体ずつ。第1章は 色の 2辺の 形を 4体、角の いちは つなぎから）→ 中ボス（その 章の 形を 問題集の ことばで）。さいごの 章は 9つの 章を 1問ずつ
 // 第1章（1周目）：はじめは 名前つき・基本の 向き（直角 右下・θ 左下）で ヘンサガシ → イロワケ → イロワケ（名前つき、向きは いろいろ）。そのあと 名前なし
-const INTRO = [{ form: 'triSide0', intro: true, basic: true }, { form: 'triPick0', intro: true, basic: true }, { form: 'triPick0', intro: true }];
+const INTRO = [{ form: 'triSide0', intro: true, basic: true, tip: true }, { form: 'triPick0', intro: true, basic: true }, { form: 'triPick0', intro: true }];
 function makeSlots(ch, rng, opt = {}) {
   const C = CHAPTERS[ch - 1];
   if (C.final) return shuffle(rng, NORM_CH.map(c => c.lv)).map(lv => ({ lv, boss: true }));
@@ -1248,7 +1249,8 @@ function makeSlots(ch, rng, opt = {}) {
     INTRO.forEach(s => rest.splice(rest.indexOf(s.form), 1));
     let order = shuffle(rng, rest);
     for (let i = 0; i < 50 && order.some((f, j) => j > 0 && !f.startsWith('triPick') && order[j - 1] === f); i++) order = shuffle(rng, order);
-    return INTRO.map(s => Object.assign({ lv: 1 }, s)).concat(order.map(form => ({ lv: 1, form })), [...Array(MID_HP).keys()].map(() => ({ lv: 1, boss: true })));
+    let tip2 = true;   // 2体目の ヘンサガシにも 見分け方の 一言
+    return INTRO.map(s => Object.assign({ lv: 1 }, s)).concat(order.map(form => { const s = { lv: 1, form }; if (tip2 && form === 'triSide0') { s.tip = true; tip2 = false; } return s; }), [...Array(MID_HP).keys()].map(() => ({ lv: 1, boss: true })));
   }
   const rest = shuffle(rng, (C.zako || C.forms).filter(f => f !== C.first));
   let order = C.first ? [C.first].concat(rest) : rest;
@@ -1278,7 +1280,9 @@ function makeProblem(slot, ctx, rng) {
   for (let i = 0; i < 400 && !prm; i++) { const c = gen(); if (fresh(c)) prm = c; }
   if (!prm) prm = gen();
   const p = build(prm, rng, { boss: !!slot.boss });
-  if (slot.intro && !target) p.labels = true;   // 辺の 名前を 書いたまま（苦手の 出し直しは 名前なし）
+  // 辺の 名前を 書いたまま 出すのは 比の 形（イロワケ）だけ。辺を 聞く 問題は 名前が 答えに なるので どの ときも 出さない（苦手の 出し直しも 名前なし）
+  if (slot.intro && !target && p.mode !== 'triSide') p.labels = true;
+  if (slot.tip && !target && p.mode === 'triSide') p.tip = SIDE_TIP[p.answer.side];   // かわりに 見分け方を 一言
   p.target = { lv: target };
   p.key = JSON.stringify(prm);
   ctx.recent.push(p.key);
@@ -1302,7 +1306,7 @@ function record(ctx, p, ok, cls, ms) {
 }
 
 G.SankakuZenhanCore = {
-  INTRO, SIDE, sideName, triSideAt, radiusAt, triLens, triVerts, triLayout, RATIO, RADIUS, DATA_V, migrateProg, migrateZk,
+  INTRO, SIDE_TIP, SIDE, sideName, triSideAt, radiusAt, triLens, triVerts, triLayout, RATIO, RADIUS, DATA_V, migrateProg, migrateZk,
   PTS, OFF_AXIS, FIG, angStr, vStr, vNum, V, NONE, cosV, sinV, tanV, valOf, solutions, segs, cuts, arcSat, arcAns, arcOf, rangeStr,
   TRIPLES, remLegs, MOVES, TREE_H, moveAns, REV, TAP, CHAPTERS, NORM_CH, FORM_LV, MONSTERS, monsterOf, zukanAfter, zukanCount,
   GEN, genPrm, makeOptions, build, figKey, judge, classify, describe, masterText, likeOK, TYPE_TEXT, MASTER_TEXT,
@@ -1763,7 +1767,8 @@ function drawTri(ctx, g, q) {
       textAt(ctx, g, t, x, y, '#fff', 'center', 14);
     });
   }
-  if (q.labels) [['hyp', '斜辺', '#fff'], ['opp', '向かい', ORANGE2], ['adj', 'となり', BLUE2]].forEach(([k, t, col]) => {
+  if (q.tip && !rev) cap(ctx, g, q.tip, CYAN);   // 見分け方の 一言（辺の 名前は 図に 書かない）
+  if (q.labels && m.mode !== 'triSide') [['hyp', '斜辺', '#fff'], ['opp', '向かい', ORANGE2], ['adj', 'となり', BLUE2]].forEach(([k, t, col]) => {
     const [a, b] = pairs[k], [x, y] = out((P[a][0] + P[b][0]) / 2, (P[a][1] + P[b][1]) / 2, 18);
     textAt(ctx, g, t, x, y, '#cfd8ff', 'center', 13);   // 名前は 同じ 色（太線の オレンジ・青と まぎれないように）
   });
@@ -2262,7 +2267,7 @@ function startTutorial() {
 function tutProblem() {
   const t = TUT[state.tut.i];
   state.problem = C.build(t.prm, Math.random);
-  state.problem.labels = true;   // 名前つきの 三角形で
+  if (state.problem.mode === 'triSide') state.problem.tip = C.SIDE_TIP[state.problem.answer.side]; else state.problem.labels = true;   // 辺を 聞く ときは 一言だけ、比の ときは 名前つき
   resetInput();
   state.phase = 'play';
   state.tut.hintSeg = !!t.seg;
