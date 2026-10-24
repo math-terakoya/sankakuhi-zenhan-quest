@@ -281,6 +281,11 @@ padding: 14px 0; text-shadow: 3px 3px 0 #400; animation: warn 2s forwards;
 #zukanList .zi.lock { color: #555; }
 #zukanList .zi.got .mk { color: #ffd84a; }
 #zukanList .zi.master .mk { color: #44ff88; }
+#zukanList .zi.mabz { border: 2px solid #ffd84a; box-shadow: 0 0 6px rgba(255,216,74,0.7), inset 0 0 6px rgba(255,120,220,0.35); }
+#zukanList .zi.mabz.lock { color: #a08a3a; }
+#monster.mab { animation: bossFloat 1.6s ease-in-out infinite, mabHue 2.4s linear infinite; text-shadow: 0 0 12px #ff7ad9, 0 0 18px #7fe8ff; }
+@keyframes mabHue { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+.boss-warn.mab { background: linear-gradient(90deg, rgba(255,90,180,0.85), rgba(255,216,74,0.9), rgba(90,200,255,0.85)); text-shadow: 3px 3px 0 #403; }
 /* せまい 画面：問題集の ことばを 少し 小さく、メッセージ欄を 少し 低く（図を のこす） */
 @media (max-width: 360px) { #problem .expr.exam { font-size: 13px; line-height: 1.45; } }
 @media (max-height: 640px) { #message { max-height: 22vh; max-height: 22dvh; } #problem .expr.exam { line-height: 1.4; } }
@@ -544,7 +549,7 @@ const R3 = Math.sqrt(3), R2 = Math.SQRT2;
 const JOGI = { 2: [['√3', R3], ['1', 1], ['2', 2]], 3: [['1', 1], ['1', 1], ['√2', R2]], 4: [['1', 1], ['√3', R3], ['2', 2]] };   // [となり, 向かい, 斜辺]
 function triLens(q) {   // [となり, 向かい, 斜辺] の [文字, 数]
   if (q.mode === 'triJogi') return JOGI[q.a];
-  const [x, y, c] = q.mode === 'triVal' ? TRIPLES[q.t] : [3, 4, 5], a = q.w ? x : y, b = q.w ? y : x;
+  const [x, y, c] = ['triVal', 'triTwo', 'triCompV'].includes(q.mode) ? TRIPLES[q.t] : [3, 4, 5], a = q.w ? x : y, b = q.w ? y : x;
   return [[String(a), a], [String(b), b], [String(c), c]];
 }
 function triVerts(q) {
@@ -592,13 +597,19 @@ const RADIUS = ['posA', 'posO'];   // 動径を えらぶ（原点から 周ま�
 const CHAPTERS = [
   // 三角比クエストⅠ（直角三角形）。第1章は 向きを 固定（θ 左下・直角 右下）、第2章から 回す。form は 図鑑の モンスター（mode は しくみの 形）
   { ch: 1, lv: 1, title: '第1章 定義', forms: ['triSide0', 'triPick0'], zako: ['triSide0', 'triPick0', 'triPick0', 'triSide0', 'triPick0', 'triPick0'], intro: true,
-    pool: ['triPick0', 'triPick0', 'triSide0'], boss: { name: 'テイギオウ', sprite: '📘' } },
+    pool: ['triPick0', 'triPick0', 'triSide0'], mab: { form: 'mabI1', name: 'ニジイロワケ', sprite: '🦄', tip: '分子と 分母が 逆なら {1|sinθ} など、逆数の 形' },
+    boss: { name: 'テイギオウ', sprite: '📘' } },
   { ch: 2, lv: 2, title: '第2章 回して 定義', forms: ['triPick', 'triSide'], zako: ['triPick', 'triPick', 'triPick', 'triSide', 'triPick', 'triSide'],
-    pool: ['triPick', 'triPick', 'triSide'], mix: true, boss: { name: 'カイテンオウ', sprite: '🎡' } },
-  { ch: 3, lv: 3, title: '第3章 辺の 長さから', forms: ['triVal', 'triJogi'], zako: ['triVal', 'triJogi', 'triVal', 'triJogi', 'triVal'], boss: { name: 'ヨミトリオウ', sprite: '📜' } },
-  { ch: 4, lv: 4, title: '第4章 たて・よこ', forms: ['triLen', 'tree', 'slope'], zako: ['triLen', 'triLen', 'tree', 'triLen', 'slope'], pool: ['triLen', 'triLen', 'tree', 'slope'], boss: { name: 'タテヨコオウ', sprite: '🏗️' } },
-  { ch: 5, lv: 5, title: '第5章 相互関係', forms: ['remRel', 'remSinA', 'remTanA', 'remTanS'], boss: { name: 'ソウカンオウ', sprite: '🔗' } },
-  { ch: 6, lv: 6, title: '第6章 90° − θ', forms: ['triComp', 'triSideC'], zako: ['triComp', 'triSideC', 'triComp', 'triComp', 'triSideC'], boss: { name: 'ヨカクオウ', sprite: '🔁' } },
+    pool: ['triPick', 'triPick', 'triSide'], mix: true, mab: { form: 'mabI2', name: 'ギャクテン', sprite: '🪐', tip: '回しても 裏返しても、向き と 逆数の 2つを みきわめる' },
+    boss: { name: 'カイテンオウ', sprite: '🎡' } },
+  { ch: 3, lv: 3, title: '第3章 辺の 長さから', forms: ['triVal', 'triJogi'], zako: ['triVal', 'triJogi', 'triVal', 'triJogi', 'triVal'], mab: { form: 'mabI3', name: 'フタツミ', sprite: '🔮', tip: 'わかって いる 2辺 から 決まる 三角比は 1つだけ' },
+    boss: { name: 'ヨミトリオウ', sprite: '📜' } },
+  { ch: 4, lv: 4, title: '第4章 たて・よこ', forms: ['triLen', 'tree', 'slope'], zako: ['triLen', 'triLen', 'tree', 'triLen', 'slope'], pool: ['triLen', 'triLen', 'tree', 'slope'], mab: { form: 'mabI4', name: 'ナナメヌシ', sprite: '🐉', tip: '斜辺が x なら x ＝ {L|sinθ} など、わり算の 形に なる' },
+    boss: { name: 'タテヨコオウ', sprite: '🏗️' } },
+  { ch: 5, lv: 5, title: '第5章 相互関係', forms: ['remRel', 'remSinA', 'remTanA', 'remTanS'], mab: { form: 'mabI5', name: 'フタステ', sprite: '🧞', tip: 'tan → cos（1 ＋ tan²θ ＝ {1|cos²θ}）→ sin（tan × cos）の 2だんかい' },
+    boss: { name: 'ソウカンオウ', sprite: '🔗' } },
+  { ch: 6, lv: 6, title: '第6章 90° − θ', forms: ['triComp', 'triSideC'], zako: ['triComp', 'triSideC', 'triComp', 'triComp', 'triSideC'], mab: { form: 'mabI6', name: 'ヨカクノカゲ', sprite: '👻', tip: '90° − θ から 見た 辺の 長さで 値を 読む' },
+    boss: { name: 'ヨカクオウ', sprite: '🔁' } },
   { ch: 7, final: true, title: 'さいごの 章', boss: { name: 'サンペンオウ', sprite: '🗿' } },
 ];
 // 新しい ゲーム なので 記録の 引きつぎは ない（版の 印だけ）
@@ -608,6 +619,7 @@ function migrateZk(zk) { return zk && Object.assign({}, zk, { _v: DATA_V }); }
 const NORM_CH = CHAPTERS.filter(c => !c.final);
 const FORM_LV = {};
 NORM_CH.forEach(c => c.forms.forEach(f => { FORM_LV[f] = c.lv; }));
+NORM_CH.forEach(c => { if (c.mab) FORM_LV[c.mab.form] = c.lv; });   // まぼろしの モンスター（3周目だけ）
 // モンスター図鑑：形ごとに 1匹 ＋ 中ボス ＋ さいごの ボス。一言は その 形の 判断の 要点
 const MONSTERS = [
   ['triSide0', 'ヘンサガシ', '🧐', '斜辺は 直角の 向かい、向かいの 辺は θ に ふれない 辺'],
@@ -626,6 +638,7 @@ const MONSTERS = [
   ['triComp', 'ムコウガワ', '🪟', '90° − θ から 見ると 向かいと となりが 入れかわる → sin(90° − θ) ＝ cosθ'],
   ['triSideC', 'ミカタカエ', '👓', '90° − θ の 向かいの 辺は θ の となりの 辺'],
 ].map(([id, name, sprite, tip]) => ({ id, ch: FORM_LV[id], name, sprite, tip }))
+  .concat(NORM_CH.filter(c => c.mab).map(c => ({ id: c.mab.form, ch: c.ch, name: c.mab.name, sprite: c.mab.sprite, tip: c.mab.tip, mab: true })))
   .concat(NORM_CH.map(c => ({ id: 'boss' + c.ch, ch: c.ch, name: c.boss.name, sprite: c.boss.sprite, tip: '中ボス：' + c.title.replace(/^第\d章 /, '') + 'を 問題集の ことばで', boss: true })))
   .concat([{ id: 'final', ch: CHAPTERS.length, name: CHAPTERS[CHAPTERS.length - 1].boss.name, sprite: CHAPTERS[CHAPTERS.length - 1].boss.sprite, tip: 'さいごの ボス：' + NORM_CH.length + 'つの 章を 問題集の ことばで', boss: true }]);
 const monsterOf = id => MONSTERS.find(m => m.id === id);
@@ -637,9 +650,12 @@ function zukanAfter(zk, e) {
   if (e.type === 'boss') z[e.id] = Math.max(cur, e.noMiss ? 2 : 1);
   return z;
 }
+// コンプは 3段階：ずかん コンプ（まぼろし いがいを 全部 ○）→ しんの コンプ（まぼろしも 全部 ○）→ かんぜん コンプ（全部 ◎）
 function zukanCount(zk) {
-  const got = MONSTERS.filter(m => (zk[m.id] || 0) >= 1).length, mas = MONSTERS.filter(m => (zk[m.id] || 0) >= 2).length;
-  return { got, mas, all: MONSTERS.length, comp: got === MONSTERS.length, perfect: mas === MONSTERS.length };
+  const v = m => zk[m.id] || 0, base = MONSTERS.filter(m => !m.mab), mabs = MONSTERS.filter(m => m.mab);
+  const got = MONSTERS.filter(m => v(m) >= 1).length, mas = MONSTERS.filter(m => v(m) >= 2).length;
+  return { got, mas, all: MONSTERS.length, mabGot: mabs.filter(m => v(m) >= 1).length, mabAll: mabs.length,
+    comp: base.every(m => v(m) >= 1), shin: MONSTERS.every(m => v(m) >= 1), perfect: MONSTERS.every(m => v(m) >= 2) };
 }
 
 // ---------- 問題を つくる ----------
@@ -654,6 +670,14 @@ const SIGN_AXIS = [['sin', 0], ['sin', 6], ['sin', 12], ['cos', 0], ['cos', 6], 
 const FN3 = ['sin', 'cos', 'tan'];
 const KATA = ['ア', 'イ', 'ウ', 'エ'];
 const GEN = {
+  // まぼろし（3周目）：章で いちばん 手ごわい 判断を 2つ 重ねる
+  mabI1: rng => { const fn = pick(rng, ['sin', 'cos', 'tan']); return { mode: 'triPick', rot: 0, flip: 0, w: ri(rng, 0, 1), num: SIDE[RATIO[fn][1]], den: SIDE[RATIO[fn][0]] }; },   // 逆数（向きは 固定）
+  mabI2: rng => { const fn = pick(rng, ['sin', 'cos', 'tan']); return Object.assign(TRI_ORIENT(rng), { mode: 'triPick', w: ri(rng, 0, 1), num: SIDE[RATIO[fn][1]], den: SIDE[RATIO[fn][0]] }); },   // 回転 ＋ 逆数
+  mabI3: rng => { const o = TRI_ORIENT(rng), t = ri(rng, 0, 1); return Object.assign(o, { mode: 'triTwo', t, w: t ? o.rot % 2 : ri(rng, 0, 1), pair: pick(rng, ['sin', 'cos', 'tan']) }); },   // 2辺だけ わかる
+  mabI4: rng => Object.assign(TRI_ORIENT(rng), { mode: 'triLen', w: ri(rng, 0, 1), k: pick(rng, ['oh', 'ah']), L: pick(rng, [5, 10, 20]) }),   // 回転 ＋ 斜辺が x
+  mabI5: rng => ({ mode: 'remTS', t: ri(rng, 0, 1), w: ri(rng, 0, 1), sg: 1 }),   // tan → cos → sin
+  mabI6: rng => { const o = TRI_ORIENT(rng), t = ri(rng, 0, 1); return Object.assign(o, { mode: 'triCompV', t, w: t ? o.rot % 2 : ri(rng, 0, 1), fn: pick(rng, ['sin', 'cos', 'tan']) }); },   // 回転 ＋ 90° − θ の 値
+  remTS: rng => ({ t: ri(rng, 0, 1), w: ri(rng, 0, 1), sg: rng() < 0.5 ? 1 : -1 }),
   triPick0: rng => Object.assign(GEN.triPick(rng), { mode: 'triPick', rot: 0, flip: 0 }),   // 第1章：向きは 固定（θ 左下・直角 右下）
   triSide0: rng => Object.assign(GEN.triSide(rng), { mode: 'triSide', rot: 0, flip: 0 }),
   triSideC: rng => Object.assign(GEN.triSide(rng), { mode: 'triSide', at: 'O' }),   // 90° − θ から 見た 辺
@@ -708,10 +732,15 @@ function makeOptions(q, rng, boss) {
   const add = (text, key, types) => c.push({ text, key: String(key), types });
   const m = q.mode;
   let fixed = false;
+  if (m === 'remTS') { const { y, x, c: hh } = remLegs(q); add(frac(y, hh), 1, []); add(frac(x, hh), 2, ['swap']); add(frac(hh, y), 3, ['flip']); add(frac(-y, hh), 4, ['sign']); }
   if (m === 'triPick') {   // 比 オレンジの 辺/青の 辺 → sinθ・cosθ・tanθ と 正解の 逆数
-    const right = Object.keys(RATIO).find(f => sideName(q.num) === RATIO[f][0] && sideName(q.den) === RATIO[f][1]);
-    ['sin', 'cos', 'tan'].forEach(f => add(f + 'θ', f, f === right ? [] : ['ratio']));
-    add('{1|' + right + 'θ}', 'inv', ['flip']);
+    let right = Object.keys(RATIO).find(f => sideName(q.num) === RATIO[f][0] && sideName(q.den) === RATIO[f][1]);
+    if (right) { ['sin', 'cos', 'tan'].forEach(f => add(f + 'θ', f, f === right ? [] : ['ratio'])); add('{1|' + right + 'θ}', 'inv', ['flip']); }
+    else {   // 分子と 分母が 逆（まぼろし）：正解は 逆数
+      right = Object.keys(RATIO).find(f => sideName(q.den) === RATIO[f][0] && sideName(q.num) === RATIO[f][1]);
+      add('{1|' + right + 'θ}', 'inv', []); add(right + 'θ', right, ['flip']);
+      ['sin', 'cos', 'tan'].filter(f => f !== right).forEach(f => add('{1|' + f + 'θ}', 'i' + f, ['ratio']));
+    }
   }
   if (m === 'triVal' || m === 'triJogi') {
     const [[a, an], [o, on], [hy, hn]] = triLens(q), S = { adj: [a, an], opp: [o, on], hyp: [hy, hn] };
@@ -735,9 +764,24 @@ function makeOptions(q, rng, boss) {
     add(right, right, []); add(same, same, ['fkeep']);
     ['sinθ', 'cosθ', 'tanθ', '{1|tanθ}'].filter(t => t !== right && t !== same).forEach(t => add(t, t, ['ratio']));
   }
-  if (m === 'triLen') {   // x を 表す 式（知って いる 辺 L と θ）
+  if (m === 'triLen' && (q.k === 'oh' || q.k === 'ah')) {   // 斜辺が x（まぼろし）：x ＝ {L|sinθ} の 分数の 形
+    const L = q.L, r = q.k === 'oh' ? 'sin' : 'cos', others = ['sin', 'cos', 'tan'].filter(f => f !== r);
+    add('{' + L + '|' + r + 'θ}', 1, []); add(L + ' ' + r + 'θ', 2, ['flip']); others.forEach((f, i) => add('{' + L + '|' + f + 'θ}', 3 + i, ['ratio']));
+  }
+  else if (m === 'triLen') {   // x を 表す 式（知って いる 辺 L と θ）
     const L = q.L, r = { hs: 'sin', hc: 'cos', at: 'tan' }[q.k], others = ['sin', 'cos', 'tan'].filter(f => f !== r);
     add(L + ' ' + r + 'θ', 1, []); others.forEach((f, i) => add(L + ' ' + f + 'θ', 2 + i, ['ratio'])); add('{' + L + '|' + r + 'θ}', 4, ['flip']);
+  }
+  if (m === 'triTwo') {   // 2辺だけ わかる：その 2辺で 決まる 三角比と 値
+    const [[, an], [, on], [, hn]] = triLens(q), S = { adj: an, opp: on, hyp: hn }, [nu, de] = RATIO[q.pair], val = frac(S[nu], S[de]);
+    add(q.pair + 'θ ＝ ' + val, 1, []); ['sin', 'cos', 'tan'].filter(f => f !== q.pair).forEach((f, i) => add(f + 'θ ＝ ' + val, 2 + i, ['ratio'])); add(q.pair + 'θ ＝ ' + frac(S[de], S[nu]), 4, ['flip']);
+  }
+  if (m === 'triCompV') {   // 長さの わかる 三角形で f(90° − θ) の 値
+    const [[, an], [, on], [, hn]] = triLens(q), S = { adj: an, opp: on, hyp: hn };
+    const fromO = { sin: ['adj', 'hyp'], cos: ['opp', 'hyp'], tan: ['adj', 'opp'] }[q.fn], same = RATIO[q.fn];
+    const fv = (a, b) => frac(S[a], S[b]);   // 同じ 値は 1つだけ（key ＝ 文字）
+    add(fv(...fromO), fv(...fromO), []); add(fv(...same), fv(...same), ['fkeep']);
+    [['opp', 'hyp'], ['adj', 'hyp'], ['opp', 'adj'], ['adj', 'opp']].forEach(([a, b]) => add(fv(a, b), fv(a, b), ['ratio']));
   }
   if (m === 'remRel') {
     const PY = 'sin²θ ＋ cos²θ ＝ 1', TQ = 'tanθ ＝ {sinθ|cosθ}', T2 = '1 ＋ tan²θ ＝ {1|cos²θ}';
@@ -886,6 +930,8 @@ function texts(q) {
   const m = q.mode;
   const L = {
     triComp: () => [['▼ 90° − θ', '図で ' + q.fn + '(90° − θ) ＝ ？'], ['図の 直角三角形を 使って、' + q.fn + '(90° − θ) を θ の 三角比で 表せ。']],
+    triTwo: () => [['▼ 2辺 から わかる 値は？', '図で 長さの わかる 2辺 から 決まる 値は どれ？'], ['図の 直角三角形で、長さの わかる 2辺 から 求められる 三角比の 値を 選べ。']],
+    triCompV: () => [['▼ 90° − θ の 値は？', '図で ' + q.fn + '(90° − θ) ＝ ？'], ['図の 直角三角形で、' + q.fn + '(90° − θ) の 値を 求めよ。']],
     triLen: () => [['▼ x の 式は？', '図の x を 表す 式は？'], ['図の 直角三角形で、x を θ を 使って 表せ。']],
     remRel: () => {
       const T = { sin: ['sinθ の 値から cosθ を 求める。つかう 式は？', 'θ は 鋭角で sinθ の 値が わかって いる。cosθ を 求める ときに 使う 関係式は どれか。'],
@@ -893,6 +939,7 @@ function texts(q) {
         sc: ['sinθ と cosθ の 値から tanθ を 求める。つかう 式は？', 'θ は 鋭角で sinθ と cosθ の 値が わかって いる。tanθ を 求める ときに 使う 関係式は どれか。'] }[q.given];
       return [['▼ どの 関係式？', T[0]], [T[1]]];
     },
+    remTS: () => { const { y, x } = remLegs(q), g = 'tanθ ＝ ' + frac(q.sg * y, x), R = q.sg > 0 ? '0° ＜ θ ＜ 90°' : '90° ＜ θ ＜ 180°'; return [['▼ のこりの 値は？', g + '（' + R + '）の とき sinθ ＝ ？'], [R + ' で、' + g + ' の とき、sinθ の 値を 求めよ。']]; },
     triPick: () => [['▼ 2辺の 比は？', '比 {[O]|[B]} は どれ？'], ['図の 直角三角形で、太線の 2辺の 比 {[O]|[B]} を、角 θ の 三角比で 表せ。']],
     triSide: () => {
       const T = { hyp: ['斜辺は どれ？', '図の 直角三角形で、斜辺を 選べ。'], opp: ['θ の 向かいの 辺は どれ？', '図の 直角三角形で、角 θ の 対辺を 選べ。'],
@@ -982,9 +1029,14 @@ const QTXT = { acute: '鋭角（0° ＜ θ ＜ 90°）は x も y も 正', obtu
 function reasonLines(q) {
   const m = q.mode, L = [];
   const push = s => { if (s) L.push(s); };
+  if (m === 'remTS') {
+    const { y, x, c } = remLegs(q);
+    L.push('1 ＋ tan²θ ＝ {1|cos²θ} → cosθ ＝ ' + frac(q.sg * x, c) + '（' + (q.sg > 0 ? '鋭角 → cos は 正' : 'tan が 負 → 鈍角 → cos は 負') + '）');
+    L.push('sinθ ＝ tanθ × cosθ ＝ ' + frac(y, c) + '（0° ＜ θ ＜ 180° で sin は 正）');
+  }
   if (m === 'triPick') {
-    const n = sideName(q.num), d = sideName(q.den), f = Object.keys(RATIO).find(k => RATIO[k][0] === n && RATIO[k][1] === d);
-    L.push('オレンジは ' + SIDE_JP[n] + '、青は ' + SIDE_JP[d] + ' → {' + SIDE_JP[n].replace('の 辺', '') + '|' + SIDE_JP[d].replace('の 辺', '') + '} ＝ ' + f + 'θ');
+    const n = sideName(q.num), d = sideName(q.den), f = Object.keys(RATIO).find(k => RATIO[k][0] === n && RATIO[k][1] === d), fi = Object.keys(RATIO).find(k => RATIO[k][0] === d && RATIO[k][1] === n);
+    L.push('オレンジは ' + SIDE_JP[n] + '、青は ' + SIDE_JP[d] + ' → {' + SIDE_JP[n].replace('の 辺', '') + '|' + SIDE_JP[d].replace('の 辺', '') + '} ＝ ' + (f ? f + 'θ' : '{1|' + fi + 'θ}（' + fi + 'θ の 分子と 分母が 逆）'));
     L.push('斜辺は 直角の 向かい、向かいの 辺は θ に ふれない 辺');
     L.push('sinθ ＝ {向かい|斜辺}、cosθ ＝ {となり|斜辺}、tanθ ＝ {向かい|となり}');
   }
@@ -995,7 +1047,13 @@ function reasonLines(q) {
     L.push('90° − θ から 見ると、向かいの 辺と となりの 辺が 入れかわる');
     L.push(q.fn + '(90° − θ) ＝ {' + nd[0] + '|' + nd[1] + '}（90° − θ から 見て）＝ {' + sw(nd[0]) + '|' + sw(nd[1]) + '}（θ から 見て）＝ ' + makeOptionsCorrect(q));
   }
-  if (m === 'triLen') {
+  if (m === 'triLen' && (q.k === 'oh' || q.k === 'ah')) {
+    const r = q.k === 'oh' ? 'sin' : 'cos', kn = q.k === 'oh' ? '向かいの 辺' : 'となりの 辺';
+    L.push('x は 斜辺、' + q.L + ' は θ の ' + kn); L.push('{' + q.L + '|x} ＝ ' + r + 'θ → x ＝ {' + q.L + '|' + r + 'θ}');
+  }
+  if (m === 'triTwo') { const [nu, de] = RATIO[q.pair]; L.push('長さの わかる 2辺は ' + SIDE_JP[nu] + 'と ' + SIDE_JP[de]); L.push(q.pair + 'θ ＝ {' + SIDE_JP[nu].replace('の 辺', '') + '|' + SIDE_JP[de].replace('の 辺', '') + '} ＝ ' + makeOptionsCorrect(q).split(' ＝ ')[1]); }
+  if (m === 'triCompV') { L.push('90° − θ から 見ると 向かいと となりが 入れかわる'); L.push(q.fn + '(90° − θ) ＝ ' + { sin: 'cosθ', cos: 'sinθ', tan: '{1|tanθ}' }[q.fn] + ' ＝ ' + makeOptionsCorrect(q)); }
+  if (m === 'triLen' && !(q.k === 'oh' || q.k === 'ah')) {
     const r = { hs: 'sin', hc: 'cos', at: 'tan' }[q.k], W = { hs: ['向かいの 辺（たて）', '斜辺'], hc: ['となりの 辺（よこ）', '斜辺'], at: ['向かいの 辺（たて）', 'となりの 辺（よこ）'] }[q.k];
     L.push('x は θ の ' + W[0] + '、' + q.L + ' は ' + W[1]);
     L.push('{x|' + q.L + '} ＝ ' + r + 'θ → x ＝ ' + q.L + ' ' + r + 'θ');
@@ -1241,7 +1299,13 @@ function damage(p, L, ev, rng, combo = 0) {
 // 各章：ザコ（形ごとに 1体ずつ。第1章は 色の 2辺の 形を 4体、角の いちは つなぎから）→ 中ボス（その 章の 形を 問題集の ことばで）。さいごの 章は 9つの 章を 1問ずつ
 // 第1章（1周目）：はじめは 名前つき・基本の 向き（直角 右下・θ 左下）で ヘンサガシ → イロワケ → イロワケ（名前つき、向きは いろいろ）。そのあと 名前なし
 const INTRO = [{ form: 'triSide0', intro: true, basic: true, tip: true }, { form: 'triPick0', intro: true, basic: true }, { form: 'triPick0', intro: true }];
+// 3周目は ザコの 中に まぼろしを 1回 入れる（2体目 いこうの どこか）
 function makeSlots(ch, rng, opt = {}) {
+  const s = makeSlots0(ch, rng, opt), C = CHAPTERS[ch - 1];
+  if (opt.mab && C.mab && !C.final) { const n = s.filter(x => !x.boss).length; s.splice(1 + Math.floor(rng() * n), 0, { lv: C.lv, form: C.mab.form, mab: true }); }
+  return s;
+}
+function makeSlots0(ch, rng, opt = {}) {
   const C = CHAPTERS[ch - 1];
   if (C.final) return shuffle(rng, NORM_CH.map(c => c.lv)).map(lv => ({ lv, boss: true }));
   if (C.intro && opt.intro) {
@@ -1263,7 +1327,7 @@ function newContext() { return { recent: [], recentFig: [], weak: {}, log: [] };
 // 問題の「中身」：向き（式 → 図／図 → 式）が ちがっても、同じ 点・同じ 弧なら 同じ 中身
 function figKey(prm) {
   const m = prm.mode;
-  if (m.startsWith('tri')) return prm.rot === 0 && prm.flip === 0 && /0$/.test(prm.f || '') ? 'tri0:' + JSON.stringify(prm) : 'tri:' + prm.rot + prm.flip;   // 同じ 向きの 三角形は 続けない（第1章は 向きが 1つ なので 中身で）
+  if (m.startsWith('tri')) return prm.rot === 0 && prm.flip === 0 && (/0$/.test(prm.f || '') || prm.f === 'mabI1') ? 'tri0:' + JSON.stringify(prm) : 'tri:' + prm.rot + prm.flip;   // 同じ 向きの 三角形は 続けない（第1章は 向きが 1つ なので 中身で）
   if (m === 'bridge') return 'br:' + prm.a + prm.ask;
   if (m.startsWith('eq')) return 'pts:' + solutions(prm.fn, prm.v).join(',');
   if (m.startsWith('ineq')) return 'arc:' + prm.fn + vStr(prm.fn, prm.v);
@@ -1283,6 +1347,7 @@ function makeProblem(slot, ctx, rng) {
   // 辺の 名前を 書いたまま 出すのは 比の 形（イロワケ）だけ。辺を 聞く 問題は 名前が 答えに なるので どの ときも 出さない（苦手の 出し直しも 名前なし）
   if (slot.intro && !target && p.mode !== 'triSide') p.labels = true;
   if (slot.tip && !target && p.mode === 'triSide') p.tip = SIDE_TIP[p.answer.side];   // かわりに 見分け方を 一言
+  if (slot.mab) { p.mab = true; p.label = '▼ まぼろしの 問題'; }
   p.target = { lv: target };
   p.key = JSON.stringify(prm);
   ctx.recent.push(p.key);
@@ -1341,7 +1406,7 @@ const state = {
 };
 const chap = () => C.CHAPTERS[state.ch - 1];
 const zakoOf = c => c.zako || c.forms;
-const nNormal = () => (chap().final ? 0 : zakoOf(chap()).length);
+const nNormal = () => (chap().final ? 0 : state.nZako);   // まぼろしが 入ると 1体 ふえる
 const atBoss = () => state.slotIdx >= nNormal();
 const bossId = () => (chap().final ? 'final' : 'boss' + chap().ch);
 // 式の 文字を TeX 風の HTML に する。stacked の ときは a/b を 上下に 積む。√ の 中身には 上に 線
@@ -1361,7 +1426,7 @@ const isPos = q => q.mode === 'posA' || q.mode === 'posO';
 const isEq = q => q.mode === 'eqSin' || q.mode === 'eqCos' || q.mode === 'eqTan';
 const isIneq = q => q.mode === 'ineqSin' || q.mode === 'ineqCos';
 const SCENE = ['tree', 'eye', 'eyeMove', 'slope', 'depAng', 'depLen'];
-const TRI = ['triPick', 'triSide', 'triVal', 'triJogi', 'triComp', 'triLen'];
+const TRI = ['triPick', 'triSide', 'triVal', 'triJogi', 'triComp', 'triLen', 'triTwo', 'triCompV'];
 
 // ---------- 図鑑の きろく ----------
 let memZk = { _v: C.DATA_V };
@@ -1380,7 +1445,7 @@ function zkEvent(e, lines) {   // 図鑑に 印を つけて、あたらしく �
   if (!before[e.id] && after[e.id]) lines.push('📖 ずかんに「' + m.name + '」が のった！' + (after[e.id] >= 2 ? '（◎）' : ''));
   else if ((before[e.id] || 0) < 2 && after[e.id] >= 2) lines.push('📖「' + m.name + '」が ◎ に なった！');
 }
-function compText(zk) { const k = C.zukanCount(zk); return k.perfect ? '👑 かんぜん コンプ' : k.comp ? '👑 ずかん コンプ！' : ''; }
+function compText(zk) { const k = C.zukanCount(zk); return k.perfect ? '👑 かんぜん コンプ' : k.shin ? '👑 しんの コンプ' : k.comp ? '👑 ずかん コンプ！' : ''; }
 function renderTitleComp() { const t = compText(loadZk()); $('compTitle').textContent = t; $('compTitle').classList.toggle('hidden', !t); }
 
 // ---------- 表示 ----------
@@ -1398,11 +1463,20 @@ function renderStatus() {
     $('progressDisplay').textContent = 'れんしゅう ' + (state.tut.i + 1) + '/' + TUT.length;
   }
 }
+// まぼろしの モンスター：特別な 演出
+function appear() {
+  if (p() && p().mab && !state.tut) { mabWarn(); return 'まぼろしの ' + enemyNow().name + 'が あらわれた！'; }
+  return enemyNow().name + 'が　あらわれた！';
+}
+function mabWarn() {
+  const el = document.createElement('div'); el.className = 'boss-warn mab'; el.textContent = '✨ まぼろし ✨';
+  gameEl.appendChild(el); setTimeout(() => el.remove(), 2000); flashScreen(); setTimeout(flashScreen, 200);
+}
 function enemyNow() { const c = chap(); return atBoss() ? c.boss : C.monsterOf(p() ? p().form : c.forms[0]); }
 function renderEnemy() {
   const c = chap(), boss = atBoss() && !state.tut, e = state.tut ? { name: 'まと', sprite: '🎯' } : enemyNow();
   monsterEl.textContent = e.sprite;
-  monsterEl.className = boss ? 'boss' : '';
+  monsterEl.className = boss ? 'boss' : p() && p().mab && !state.tut ? 'mab' : '';
   $('monsterName').textContent = e.name;
   gameEl.classList.toggle('boss-mid', boss && !c.final);
   gameEl.classList.toggle('boss-final', boss && !!c.final);
@@ -1726,7 +1800,7 @@ function drawTri(ctx, g, q) {
       if (pick === k) { col = vk === 'ans' && state.reveal ? YEL : BLUE; w = 7; }
     }
     if (m.mode === 'triLen') {   // 知って いる 辺（青）と x（答えの ときは きいろ）
-      const known = m.k === 'at' ? 'adj' : 'hyp', xs = m.k === 'hc' ? 'adj' : 'opp';
+      const known = { at: 'adj', hs: 'hyp', hc: 'hyp', oh: 'opp', ah: 'adj' }[m.k], xs = { at: 'opp', hs: 'opp', hc: 'adj', oh: 'hyp', ah: 'hyp' }[m.k];
       if (k === known) { col = BLUE2; w = 5; } else if (k === xs) { col = rev ? YEL : '#fff'; w = rev ? 6 : 3; } else { col = 'rgba(200,200,200,0.55)'; w = 1.6; }
     }
     side(pr, col, w);
@@ -1745,7 +1819,7 @@ function drawTri(ctx, g, q) {
   const mid = lo + ((((hi - lo) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) / 2;
   textAt(ctx, g, m.mode === 'triJogi' ? C.angStr(m.a) : q.exam && m.mode === 'triVal' ? '' : 'θ', P[0][0] + rl * Math.cos(mid), P[0][1] + rl * Math.sin(mid), YEL, 'center', 14);
   // 90° − θ（O の 角）
-  if (m.mode === 'triComp' || (m.mode === 'triSide' && m.at === 'O')) {
+  if (m.mode === 'triComp' || m.mode === 'triCompV' || (m.mode === 'triSide' && m.at === 'O')) {
     const b1 = Math.atan2(P[1][1] - P[2][1], P[1][0] - P[2][0]), b2 = Math.atan2(P[0][1] - P[2][1], P[0][0] - P[2][0]);
     let l2 = b1, h2 = b2; if (((h2 - l2) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) > Math.PI) { l2 = b2; h2 = b1; }
     const near2 = Math.min(Math.hypot(P[1][0] - P[2][0], P[1][1] - P[2][1]), Math.hypot(P[0][0] - P[2][0], P[0][1] - P[2][1]));
@@ -1755,16 +1829,17 @@ function drawTri(ctx, g, q) {
     textAt(ctx, g, '90°−θ', Math.min(g.W - 22 * d, Math.max(22 * d, ox)), oy, CYAN, 'center', 12);
   }
   if (m.mode === 'triLen') {
-    const known = m.k === 'at' ? 'adj' : 'hyp', xs = m.k === 'hc' ? 'adj' : 'opp';
+    const known = { at: 'adj', hs: 'hyp', hc: 'hyp', oh: 'opp', ah: 'adj' }[m.k], xs = { at: 'opp', hs: 'opp', hc: 'adj', oh: 'hyp', ah: 'hyp' }[m.k];
     [[known, String(m.L), BLUE2], [xs, 'x', rev ? YEL : '#fff']].forEach(([k, t, col]) => { const [a, b] = pairs[k], [x, y] = out((P[a][0] + P[b][0]) / 2, (P[a][1] + P[b][1]) / 2, 16); textAt(ctx, g, t, x, y, col, 'center', 15); });
-    if (rev) cap(ctx, g, 'x ＝ ' + m.L + ' ' + { hs: 'sin', hc: 'cos', at: 'tan' }[m.k] + 'θ');
+    if (rev) { const r = { hs: 'sin', hc: 'cos', at: 'tan', oh: 'sin', ah: 'cos' }[m.k]; if (m.k === 'oh' || m.k === 'ah') capF(ctx, g, ['x ＝ ', { nu: String(m.L), de: r + 'θ' }]); else cap(ctx, g, 'x ＝ ' + m.L + ' ' + r + 'θ'); }
   }
   if (m.mode === 'triComp' && rev) capF(ctx, g, [m.fn + '(90°−θ) ＝ ', { nu: { sin: 'となり', cos: '向かい', tan: 'となり' }[m.fn], de: { sin: '斜辺', cos: '斜辺', tan: '向かい' }[m.fn] }, ' ＝ '].concat(m.fn === 'tan' ? [{ nu: '1', de: 'tanθ' }] : [{ sin: 'cosθ', cos: 'sinθ' }[m.fn]]));
   // 辺の 長さ（値の 問題）・頂点の 名前（問題集の 三角形 ABC）
-  if (m.mode === 'triVal' || m.mode === 'triJogi') {
-    [[pairs.adj, lens[0][0]], [pairs.opp, lens[1][0]], [pairs.hyp, lens[2][0]]].forEach(([[a, b], t]) => {
+  if (m.mode === 'triVal' || m.mode === 'triJogi' || m.mode === 'triTwo' || m.mode === 'triCompV') {
+    const shown = m.mode === 'triTwo' ? C.RATIO[m.pair] : ['adj', 'opp', 'hyp'];   // 2辺だけ の ときは のこりを ？
+    [[pairs.adj, lens[0][0], 'adj'], [pairs.opp, lens[1][0], 'opp'], [pairs.hyp, lens[2][0], 'hyp']].forEach(([[a, b], t, k]) => {
       const [x, y] = out((P[a][0] + P[b][0]) / 2, (P[a][1] + P[b][1]) / 2, 15);
-      textAt(ctx, g, t, x, y, '#fff', 'center', 14);
+      textAt(ctx, g, shown.includes(k) ? t : '?', x, y, shown.includes(k) ? '#fff' : '#888', 'center', 14);
     });
   }
   if (q.tip && !rev) cap(ctx, g, q.tip, CYAN);   // 見分け方の 一言（辺の 名前は 図に 書かない）
@@ -1776,7 +1851,8 @@ function drawTri(ctx, g, q) {
   // 説明
   if (m.mode === 'triPick') {
     const f = C.RATIO, n = C.sideName(m.num), dn = C.sideName(m.den), fn = Object.keys(f).find(k => f[k][0] === n && f[k][1] === dn);
-    capF(ctx, g, ['比 ', { nuBar: ORANGE2, deBar: BLUE2 }].concat(rev ? [' ＝ ' + fn + 'θ'] : []), rev ? YEL : '#fff');   // 分数の 形（分子 オレンジ、分母 青）
+    const fi = Object.keys(f).find(k => f[k][0] === dn && f[k][1] === n);   // 逆数の とき
+    capF(ctx, g, ['比 ', { nuBar: ORANGE2, deBar: BLUE2 }].concat(rev ? (fn ? [' ＝ ' + fn + 'θ'] : [' ＝ ', { nu: '1', de: fi + 'θ' }]) : []), rev ? YEL : '#fff');   // 分数の 形（分子 オレンジ、分母 青）
   }
   if (m.mode === 'triSide' && rev && g.W >= 300 * d) cap(ctx, g, m.at === 'O' ? '向かいと となりが 入れかわる' : { hyp: '斜辺 ＝ 直角の 向かい', opp: '向かい ＝ θ に ふれない', adj: 'となり ＝ θ と 直角の 間' }[m.ask]);
 }
@@ -1791,7 +1867,7 @@ function drawRemTri(ctx, g, q) {
   ctx.strokeStyle = YEL; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.arc(P[0][0], P[0][1], 22 * d, a2, 0); ctx.stroke();
   textAt(ctx, g, 'θ', P[0][0] + 36 * d * Math.cos(a2 / 2), P[0][1] + 36 * d * Math.sin(a2 / 2), YEL, 'center', 14);
   if (m.mode === 'remRel') { [['斜辺', 0, 2, -14], ['向かい', 1, 2, 18], ['となり', 0, 1, 14]].forEach(([t, i, j, k]) => textAt(ctx, g, t, (P[i][0] + P[j][0]) / 2 + (i === 1 ? k * d : 0), (P[i][1] + P[j][1]) / 2 + (i === 1 ? 0 : k * d), '#cfd8ff', 'center', 13)); return; }
-  const show = { remSin: { opp: 1, hyp: 1 }, remTanG: { opp: 1, adj: 1 }, remTan: { opp: 1, adj: 1, hyp: 1 } }[m.mode] || {};
+  const show = { remSin: { opp: 1, hyp: 1 }, remTanG: { opp: 1, adj: 1 }, remTS: { opp: 1, adj: 1 }, remTan: { opp: 1, adj: 1, hyp: 1 } }[m.mode] || {};
   const lab = (k, t, x, y) => textAt(ctx, g, show[k] ? t : (rev ? t : '?'), x, y, show[k] ? '#fff' : (rev ? YEL : '#888'), 'center', 15);
   lab('adj', a, (P[0][0] + P[1][0]) / 2, P[0][1] + 14 * d);
   lab('opp', o, P[1][0] + 16 * d, (P[1][1] + P[2][1]) / 2);
@@ -2027,7 +2103,8 @@ function startChapter(ch) {
   state.ch = ch;
   const c = chap();
   const pr0 = loadProg(), intro = pr0.lap === 1;   // 1周目だけ はじめは 見せる
-  state.slots = C.makeSlots(ch, rng, { intro });
+  state.slots = C.makeSlots(ch, rng, { intro, mab: pr0.lap === 3 });   // 3周目だけ まぼろし
+  state.nZako = state.slots.filter(s => !s.boss).length; state.mabMiss = false;
   state.slotIdx = 0; state.combo = 0; state.bossMiss = false;
   state.hp = state.maxHp = c.final ? C.finalHP(heroLV()) : C.zakoHP(heroLV());
   state.lives = MAX_LIVES;
@@ -2035,7 +2112,7 @@ function startChapter(ch) {
   newProblem();
   if (c.final) bossWarn(true);
   if (c.intro && intro) { $('defClose').textContent = '▶ たたかう'; $('defScreen').classList.remove('hidden'); $('defScreen').scrollTop = 0; }   // 第1章の まえに 定義を 見せる
-  setMessage((c.final ? c.boss.name + 'が あらわれた！\nここからは 問題集の ことばで 出るぞ！' : c.title + '\n' + enemyNow().name + 'が　あらわれた！') + '\n' + hint());
+  setMessage((c.final ? c.boss.name + 'が あらわれた！\nここからは 問題集の ことばで 出るぞ！' : c.title + '\n' + appear()) + '\n' + hint());
 }
 function answerNow() {
   const q = p();
@@ -2074,7 +2151,7 @@ function onCorrect(ev) {
   if (ev.mastered.length) zkEvent({ type: 'master', id: q.form }, lines);
   if (hold) lines.push(e.name + '「まだ たおれぬ！」');
   if (stay) lines.push(e.name + '「にがてを こくふく するまで たおれぬ！」');
-  if (state.hp <= 0) zkEvent(boss ? { type: 'boss', id: bossId(), noMiss: !state.bossMiss } : { type: 'kill', id: q.form }, lines);
+  if (state.hp <= 0) zkEvent(boss ? { type: 'boss', id: bossId(), noMiss: !state.bossMiss } : q.mab ? { type: 'boss', id: q.form, noMiss: !state.mabMiss } : { type: 'kill', id: q.form }, lines);   // まぼろしの ◎ は ノーミス
   setMessage(lines.join('\n'));
   if (hit.crit) { const el = document.createElement('div'); el.className = 'level-up crit'; el.textContent = 'かいしんの いちげき！'; gameEl.appendChild(el); setTimeout(() => el.remove(), 1500); }
   const wait = (hit.crit ? 1500 : 1000) + (lines.some(l => l.startsWith('📖')) ? 400 : 0);
@@ -2100,7 +2177,7 @@ function afterDefeat() {
   }
   state.hp = state.maxHp = C.zakoHP(L);
   newProblem();
-  setMessage(enemyNow().name + 'が　あらわれた！\n' + hint());
+  setMessage(appear() + '\n' + hint());
 }
 // ---------- 周回の きろく（単位円クエストと おなじ） ----------
 const MAX_LAP = 3;
@@ -2146,14 +2223,15 @@ function showMap() {
 function showZukan() {
   const zk = loadZk(), k = C.zukanCount(zk);
   let html = '', last = 0;
-  C.MONSTERS.slice().sort((a, b) => a.ch - b.ch || (a.boss ? 1 : 0) - (b.boss ? 1 : 0)).forEach(m => {
+  C.MONSTERS.slice().sort((a, b) => a.ch - b.ch || (a.boss ? 2 : a.mab ? 1 : 0) - (b.boss ? 2 : b.mab ? 1 : 0)).forEach(m => {
     if (m.ch !== last) { html += '<div class="zch">' + C.CHAPTERS[m.ch - 1].title + '</div>'; last = m.ch; }
     const v = zk[m.id] || 0;
-    if (!v) { html += '<div class="zi lock" data-id="' + m.id + '"><span class="mk">・</span><span class="sp">？</span><span class="nm">？？？</span><span class="tip">' + (m.boss ? 'まだ たおして いない ボス' : 'まだ たおして いない') + '</span></div>'; return; }
-    html += '<div class="zi ' + (v >= 2 ? 'master' : 'got') + '" data-id="' + m.id + '"><span class="mk">' + (v >= 2 ? '◎' : '○') + '</span><span class="sp">' + m.sprite + '</span><span class="nm">' + m.name + (m.boss ? '（ボス）' : '') + '</span><span class="tip">' + mathHTML(m.tip, false) + '</span></div>';
+    const mz = m.mab ? ' mabz' : '';   // まぼろしは 金の わく
+    if (!v) { html += '<div class="zi lock' + mz + '" data-id="' + m.id + '"><span class="mk">・</span><span class="sp">？</span><span class="nm">？？？' + (m.mab ? '（3しゅうめに あらわれる）' : '') + '</span><span class="tip">' + (m.mab ? 'まぼろしの モンスター' : m.boss ? 'まだ たおして いない ボス' : 'まだ たおして いない') + '</span></div>'; return; }
+    html += '<div class="zi ' + (v >= 2 ? 'master' : 'got') + mz + '" data-id="' + m.id + '"><span class="mk">' + (v >= 2 ? '◎' : '○') + '</span><span class="sp">' + m.sprite + '</span><span class="nm">' + (m.mab ? 'まぼろしの ' : '') + m.name + (m.boss ? '（ボス）' : '') + '</span><span class="tip">' + mathHTML(m.tip, false) + '</span></div>';
   });
   $('zukanList').innerHTML = html;
-  $('zukanCount').textContent = 'たおした ' + k.got + '/' + k.all + '　◎ ' + k.mas + '/' + k.all;
+  $('zukanCount').textContent = 'たおした ' + k.got + '/' + k.all + '　◎ ' + k.mas + '/' + k.all + '　まぼろし ' + k.mabGot + '/' + k.mabAll;
   $('zukanComp').textContent = compText(zk); $('zukanComp').classList.toggle('hidden', !compText(zk));
   $('mapScreen').classList.add('hidden'); $('zukanScreen').classList.remove('hidden'); $('zukanScreen').scrollTop = 0;
 }
@@ -2199,6 +2277,7 @@ function onWrong(cls) {
   const q = p();
   state.combo = 0;
   if (atBoss()) state.bossMiss = true;
+  if (q.mab) state.mabMiss = true;
   state.lives -= 1; state.phase = 'next'; state.reveal = true; state.view = 'ans';
   draw(); renderControls(); renderStatus();
   monsterAnim('miss-dmg'); showDamage('MISS', '#ff4444');
