@@ -297,8 +297,9 @@ padding: 14px 0; text-shadow: 3px 3px 0 #400; animation: warn 2s forwards;
 .key { min-width: 0; max-width: 100%; overflow: hidden; }
 #game, #status, #message, #battle, #problem, #controls { min-width: 0; max-width: 100%; }
 #status .row { min-width: 0; gap: 4px; }
-#status .row .value { min-width: 0; overflow-wrap: anywhere; text-align: right; }
-#message, #problemExpr { overflow-wrap: anywhere; }
+#status .row .value { min-width: 0; word-break: keep-all; overflow-wrap: break-word; text-align: right; }   /* ことばの 途中で 折らない（空白で 折る） */
+#message { overflow-wrap: anywhere; }
+#problemExpr { overflow-wrap: break-word; }
 #status { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #status .label { white-space: nowrap; }
 #status .row:not(.wide) .value { white-space: nowrap; }
@@ -1574,7 +1575,30 @@ function renderControls() {
 }
 
 // 選択肢の 文字が ボタンに 入りきらない ときは、文字を 小さく（13px まで）→ それでも 入らなければ 1列に して もう一度
+
+// 問題文の 式は 演算子の 前後で 改行しない（文字が 大きい 設定でも 式が 途中で 折れないように）
+function keepMath(root) {
+  if (!root) return;
+  const re = /[^\s，．、。]+(?:[  ][＝＋−×＜＞≦≧±][  ][^\s，．、。]+)+/g, nodes = [], made = [];
+  const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+  while ((n = tw.nextNode())) if (!(n.parentNode.classList && n.parentNode.classList.contains('nwm'))) nodes.push(n);
+  const box = t => { const sp = document.createElement('span'); sp.className = 'nwm'; sp.style.whiteSpace = 'nowrap'; sp.textContent = t; return sp; };
+  for (const n of nodes) {   // 式の かたまり（a ＝ 7、(2 ＋ √3)x など）を 改行しない 箱に 入れる
+    const t = n.textContent; let m, last = 0; const frag = document.createDocumentFragment(); re.lastIndex = 0;
+    while ((m = re.exec(t))) { frag.appendChild(document.createTextNode(t.slice(last, m.index))); const sp = box(m[0]); made.push(sp); frag.appendChild(sp); last = m.index + m[0].length; }
+    if (last) { frag.appendChild(document.createTextNode(t.slice(last))); n.parentNode.replaceChild(frag, n); }
+  }
+  for (const sp of made) {   // 1行に 入りきらない 長い 式だけ、＝・不等号の 前で 改行して よい ことに する
+    if (sp.offsetWidth <= root.clientWidth) continue;
+    const parts = sp.textContent.split(/[  ](?=[＝＜＞≦≧][  ])/);
+    if (parts.length < 2) continue;
+    const frag = document.createDocumentFragment();
+    parts.forEach((x, i) => { if (i) frag.appendChild(document.createTextNode(' ')); frag.appendChild(box(x)); });
+    sp.parentNode.replaceChild(frag, sp);
+  }
+}
 function fitOpts() {
+  keepMath($('problemExpr'));
   const c = $('controls'), vis = optBtns.filter(b => !b.classList.contains('hidden'));
   c.classList.remove('one'); optBtns.forEach(b => { b.style.fontSize = ''; });
   if (!vis.length) return;
