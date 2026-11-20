@@ -162,6 +162,7 @@ min-height: 44px; touch-action: manipulation;
 .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: 0.78em; line-height: 1.08; margin: 0 2px; }
 .fr > .nu { border-bottom: 1.5px solid currentColor; padding: 0 3px 1px; }
 .fr > .de { padding: 1px 3px 0; }
+.fr > .de:has(sup) { padding-top: 0.42em; }   /* 分母に 指数が ある ときは 横線から はなす（11-20 先生） */
 .rt { white-space: nowrap; }
 .bar { display: inline-block; width: 1.9em; height: 6px; border-radius: 2px; vertical-align: middle; margin: 3px 1px; }
 .bar.o { background: #ff9f43; }
@@ -319,6 +320,10 @@ padding: 14px 0; text-shadow: 3px 3px 0 #400; animation: warn 2s forwards;
 .maru.gold span { text-shadow: 3px 3px 0 #8a5a00, 0 0 14px #ffd84a; }
 @keyframes maru { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; } 22% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
   36% { transform: translate(-50%, -50%) scale(1); } 78% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.04); opacity: 0; } }
+/* — 文字 大／小（11-20 先生：年配の 同僚から「問題の 文字が 小さい」。大 は ゲーム全体を 同じ 割合で 大きく。えらんだ ほうは この 端末に おぼえる） — */
+.moji { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; color: #aaa; font-size: 13px; letter-spacing: 1px; }
+.moji-btn { background: #000; border: 2px solid #666; color: #aaa; font-family: inherit; font-size: 15px; min-width: 44px; padding: 6px 10px; cursor: pointer; }
+.moji-btn.on { border-color: #ffff00; color: #ffff00; }
 </style>
 </head>
 <body>
@@ -332,6 +337,7 @@ padding: 14px 0; text-shadow: 3px 3px 0 #400; animation: warn 2s forwards;
     <p style="margin-top:20px;">直角三角形の 辺を みきわめ<br>モンスターを うちたおせ！</p>
     <button class="start-btn" id="startBtn">▶ はじめる</button>
     <button class="how-btn" id="howBtn">？ あそびかた</button>
+    <div class="moji">もじ<button class="moji-btn" data-v="small">小</button><button class="moji-btn" data-v="big">大</button></div>
     <p class="sub" style="margin-top:20px;font-size:10px;">6つの 章（どこからでも）→ さいごの 章<br>モンスターずかんを うめよう</p>
     <p class="sub" style="margin-top:14px;font-size:9px;opacity:0.7;">© 2026 math-terakoya　CC BY-NC-SA 4.0</p>
   </div>
@@ -382,6 +388,7 @@ padding: 14px 0; text-shadow: 3px 3px 0 #400; animation: warn 2s forwards;
     <p class="sub" id="mapLV" style="margin-bottom:8px;">ゆうしゃ LV 1</p>
     <p class="comp hidden" id="mapComp"></p>
     <button class="zukan-btn" id="zukanBtn">📖 モンスターずかん</button>
+    <div class="moji">もじ<button class="moji-btn" data-v="small">小</button><button class="moji-btn" data-v="big">大</button></div>
     <div id="chapterList"></div>
   </div>
 
@@ -1678,7 +1685,7 @@ function resizePlane() {
   fitOpts();
   const w = Math.floor(Math.min(wrap.clientWidth - 12, (wrap.clientHeight - 8) / C.FIG.ASPECT));
   const W = Math.max(100, w), H = Math.round(W * C.FIG.ASPECT);
-  DPR = Math.min(window.devicePixelRatio || 1, 3);
+  DPR = Math.min((window.devicePixelRatio || 1) * ZK(), 4);   // 文字 大 でも 図が ぼやけない
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
   canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
   draw();
@@ -2179,12 +2186,14 @@ canvas.addEventListener('click', e => {
 // ---------- 演出 ----------
 function flashScreen() { const f = $('flash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }
 function monsterAnim(cls) { monsterEl.classList.remove('hit', 'miss-dmg'); void monsterEl.offsetWidth; monsterEl.classList.add(cls); }
+// 文字 大（#game に zoom）の ときは、測った 位置（画面の px）と 置く 位置（ゲームの 中の px）の 割合が ちがう。その 割合（11-20）
+const ZK = () => { const g = document.getElementById('game'); const k = g.getBoundingClientRect().width / (g.offsetWidth || 1); return k > 0.2 ? k : 1; };
 function showDamage(text, color) {
   const el = document.createElement('div');
   el.className = 'dmg-float'; el.textContent = text; el.style.color = color;
   el.style.textShadow = '2px 2px 0 #000, 0 0 8px ' + color;
   const r = monsterEl.getBoundingClientRect(), g = gameEl.getBoundingClientRect();
-  el.style.left = (r.left - g.left + r.width / 2 - 16) + 'px'; el.style.top = (r.top - g.top) + 'px';
+  el.style.left = ((r.left - g.left + r.width / 2) / ZK() - 16) + 'px'; el.style.top = (r.top - g.top) / ZK() + 'px';
   gameEl.appendChild(el); setTimeout(() => el.remove(), 1000);
 }
 const HOME = ['すごい！', 'その とおり！', 'ナイス！', 'さすが！', 'みきわめた！', 'かんぺき！', 'いいね！'];
@@ -2432,8 +2441,8 @@ function placeBtnHint() {
   if (!pulseId) return;
   const el = pulseId.startsWith('opt') ? optBtns[+pulseId[3]] : $(pulseId);
   const b = el.getBoundingClientRect(), g = gameEl.getBoundingClientRect();
-  $('btnHint').style.left = (b.left - g.left + b.width * 0.84) + 'px';
-  $('btnHint').style.top = (b.top - g.top + 26) + 'px';
+  $('btnHint').style.left = (b.left - g.left + b.width * 0.84) / ZK() + 'px';
+  $('btnHint').style.top = ((b.top - g.top) / ZK() + 26) + 'px';
 }
 let blinkTimer = null;
 function startBlink() { stopBlink(); state.blinkOn = true; blinkTimer = setInterval(() => { state.blinkOn = !state.blinkOn; draw(); }, 450); }
@@ -2449,10 +2458,10 @@ function tutSideMid() { const q = p(), L = C.triLayout(q.prm), [a, b] = C.SIDE[q
 function placeTapHint() {
   if (!state.tut || state.tut.step !== 'tap') return;
   const cr = canvas.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
-  if (p() && p().answer && p().answer.side) { const [fx, fy] = tutSideMid(); $('tapHint').style.left = (cr.left - wr.left + fx * cr.width) + 'px'; $('tapHint').style.top = (cr.top - wr.top + fy * cr.height) + 'px'; return; }
+  if (p() && p().answer && p().answer.side) { const [fx, fy] = tutSideMid(); $('tapHint').style.left = (cr.left - wr.left + fx * cr.width) / ZK() + 'px'; $('tapHint').style.top = (cr.top - wr.top + fy * cr.height) / ZK() + 'px'; return; }
   const [x, y] = tutTarget(), F = C.FIG;
-  $('tapHint').style.left = (cr.left - wr.left + (0.5 + x * F.R) * cr.width) + 'px';
-  $('tapHint').style.top = (cr.top - wr.top + (F.CY - y * F.R / F.ASPECT) * cr.height) + 'px';
+  $('tapHint').style.left = (cr.left - wr.left + (0.5 + x * F.R) * cr.width) / ZK() + 'px';
+  $('tapHint').style.top = (cr.top - wr.top + (F.CY - y * F.R / F.ASPECT) * cr.height) / ZK() + 'px';
 }
 function startTutorial() {
   state.tut = { i: 0, step: 'tap' };
@@ -2590,6 +2599,34 @@ renderTitleComp(); renderStatus(); renderControls();
   };
   new MutationObserver(fit).observe(el, { childList: true, characterData: true, subtree: true });
   window.addEventListener('resize', fit); fit();
+})();
+</script>
+<script>
+// 文字 大／小。大 は #game に zoom を かけ、たて・よこは 割り戻して 画面に ちょうど 入れる（vh は 使わず px で 入れる）
+(() => {
+  const KEY = 'mt-moji', g = document.getElementById('game');
+  let big = false, busy = false;
+  try { big = localStorage.getItem(KEY) === 'big'; } catch (e) {}
+  const apply = () => {
+    if (busy) return; busy = true;
+    const W = innerWidth, H = innerHeight;
+    if (!big) { g.style.zoom = ''; g.style.width = ''; g.style.maxWidth = ''; g.style.height = ''; g.style.maxHeight = ''; }
+    else {
+      const z = W >= 600 ? Math.max(1.1, Math.min(1.6, H / 680, W / 480)) : 1.15;
+      g.style.zoom = z; g.style.maxWidth = 'none'; g.style.maxHeight = 'none';
+      g.style.width = Math.min(480, W / z) + 'px'; g.style.height = (H / z) + 'px';
+    }
+    document.querySelectorAll('.moji-btn').forEach(b => b.classList.toggle('on', (b.dataset.v === 'big') === big));
+    window.dispatchEvent(new Event('resize'));
+    busy = false;
+  };
+  document.querySelectorAll('.moji-btn').forEach(b => b.addEventListener('click', () => {
+    big = b.dataset.v === 'big';
+    try { localStorage.setItem(KEY, big ? 'big' : 'small'); } catch (e) {}
+    apply();
+  }));
+  window.addEventListener('resize', apply);
+  apply();
 })();
 </script>
 </body>
