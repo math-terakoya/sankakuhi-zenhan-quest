@@ -339,6 +339,7 @@ padding: 14px 0; text-shadow: 3px 3px 0 #400; animation: warn 2s forwards;
 #game.moji-on #problem .expr.exam { font-size: 20px; }
 #battle { grid-template-columns: max-content minmax(0, 1fr); gap: 8px; }   /* 左の 列は「やくそく」ボタンの 幅まで 広げる（問題の 文字が ボタンに 重ならない ように） */
 #enemy { min-width: 64px; }
+#skipTut:not(.hidden) ~ #problem .label { padding-right: 74px; text-align: left; }   /* れんしゅうの「とばす」ボタンに 見出しが 重ならない ように（11-25） */
 </style>
 </head>
 <body>
@@ -1568,10 +1569,11 @@ function fitProblem() {
     if (nw.scrollWidth > el.clientWidth) nw.style.whiteSpace = 'normal';   // それでも 入らなければ 折り返す
   });
   fitW(17);   // 1行に 入らない ときは 17px まで 小さく して、それでも 入らなければ 折り返す（11-25 先生：問題の 文字を 大きく）
+  if (typeof keepMath === 'function') keepMath(el);   // 文字の 大きさが 変わったら 式の 箱を 測り直す（11-25）
   // 図が 小さく なりすぎる ときだけ、問題の 文字を 1px ずつ もどす（13px まで）。選択肢の 問題は 図が 小さめでも よい・図を タップする 問題は 図を 大きく 残す（11-25 先生）
   const q = p(), need = q && q.options ? 130 : 200;
   let fs = parseFloat(getComputedStyle(el).fontSize);
-  while (wrap.offsetParent && wrap.clientHeight < need && fs > 13) { fs -= 1; el.style.fontSize = fs + 'px'; fitW(13); }   // 13px より 小さくは しない（入らなければ 折り返す）
+  while (wrap.offsetParent && wrap.clientHeight < need && fs > 13) { fs -= 1; el.style.fontSize = fs + 'px'; fitW(13); if (typeof keepMath === 'function') keepMath(el); }   // 13px より 小さくは しない（入らなければ 折り返す）
 }
 function show(el, on) { el.classList.toggle('hidden', !on); }
 function renderMapBtn() { $('mapBtn').classList.toggle('hidden', !!state.tut || !(state.phase === 'play' || state.phase === 'next')); }
@@ -1705,6 +1707,7 @@ function setMessage(text) { $('msgText').innerHTML = mathHTML(text, false); $('m
 let DPR = 1;
 function resizePlane() {
   fitOpts();
+  if (p()) fitProblem();   // 図の 大きさを 決める 前に 問題の 文字を 決める（あとで 変えると 指の ヒントが ずれる。11-25）
   const w = Math.floor(Math.min(wrap.clientWidth - 12, (wrap.clientHeight - 8) / C.FIG.ASPECT));
   const W = Math.max(100, w), H = Math.round(W * C.FIG.ASPECT);
   DPR = Math.min((window.devicePixelRatio || 1) * ZK(), 4);   // 文字 大 でも 図が ぼやけない
@@ -1712,7 +1715,6 @@ function resizePlane() {
   canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
   draw();
   placeTapHint(); placeBtnHint();
-  if (p()) fitProblem();
 }
 function geo() { const W = canvas.width, H = canvas.height; return { W, H, cx: W / 2, cy: H * C.FIG.CY, r: W * C.FIG.R, d: DPR }; }
 const X = (g, x) => g.cx + x * g.r;
